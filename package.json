@@ -9,7 +9,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": ["onCommand:spotify-personal.openSpotifyPanel"],
+  "activationEvents": [
+    "onCommand:spotify-personal.openSpotifyPanel"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
@@ -36,6 +38,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
+    "@types/spotify-web-api-node": "^5.0.11",
     "@types/vscode": "^1.102.0",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
