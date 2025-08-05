@@ -329,9 +329,19 @@ async function getWebviewContent(context: vscode.ExtensionContext): Promise<stri
     const htmlPath = path.join(context.extensionPath, 'src', 'media', 'panel.html');
     let html = fs.readFileSync(htmlPath, 'utf8');
 
+    const renderedPlaylists = playlists.map(playlist => `
+        <li class="clickable">
+            <span class="track-info">🎵 ${playlist.name}</span>
+            <div class="track-buttons">
+                <button class="small-btn" onclick="openPlaylist('${playlist.id}', '${playlist.name}')">View</button>
+                <button class="small-btn" onclick="playPlaylist('${playlist.uri}')">▶️ Play</button>
+            </div>
+        </li>
+    `).join('');
+
     html = html
-        .replace('${currentTrack}', JSON.stringify(currentTrack || ''))
-        .replace('${playlists}', JSON.stringify(playlists || []));
+        .replace('<!-- PLAYLIST_ITEMS -->', renderedPlaylists)
+        .replace('${currentTrack}', currentTrack || 'Nothing playing');
 
     return html;
 }
