@@ -11,7 +11,7 @@
   ],
   "repository": {
     "type": "git",
-    "url":"https://github.com/NithinKonda/vs-tify" 
+    "url": "https://github.com/NithinKonda/vs-tify"
   },
   "activationEvents": [
     "onCommand:spotify-personal.openSpotifyPanel"

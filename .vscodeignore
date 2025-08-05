@@ -2,7 +2,8 @@
 .vscode-test/**
 out/**
 node_modules/**
-src/**
+- src/**
++ !src/media/panel.html
 .gitignore
 .yarnrc
 esbuild.js
