@@ -1,71 +1,84 @@
-# spotify-personal README
 
-This is the README for your extension "spotify-personal". After writing up a brief description, we recommend including the following sections.
+# Personal Spotify VS Code Extension
 
-## Features
+Bring your Spotify library right into VS Code.
+Control playback, browse playlists, and search tracks without leaving your editor.
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+## ✨ Features
 
-For example if there is an image subfolder under your extension project workspace:
+| Feature | Description |
+| :-- | :-- |
+| 🎛 **Status-bar control** | A compact Spotify icon in the status bar opens the full panel. |
+| 🎵 **Now Playing** | Shows the current (or most recent) track with artist names and live refresh. |
+| 🔍 **Quick Search** | Search tracks by name and play any result instantly. |
+| 📑 **Playlists Browser** | Lists all your playlists. View tracks inside any playlist or start it with one click. |
+| ▶️ **Playback controls** | Play/pause, skip, play individual tracks, or play entire playlists. |
+| ♻️ **Auto-refresh tokens** | Uses your refresh token to keep the session alive indefinitely—no manual renewals. |
 
-\!\[feature X\]\(images/feature-x.png\)
+*(Add screenshots or GIFs in an `images/` folder and reference them here, e.g. `*
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## 📦 Requirements
 
-## Requirements
+1. **Spotify Premium account** – the Web API can only control playback on Premium.
+2. **A Spotify Developer app** – create one at [https://developer.spotify.com/dashboard](https://developer.spotify.com/dashboard).
+3. **Access \& Refresh tokens** – follow the steps below once; the extension refreshes automatically afterwards.
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+### Obtaining tokens (one-time)
 
-## Extension Settings
+1. In the Spotify Dashboard, add a redirect URI:
+`http://127.0.0.1:3000/callback`
+2. Copy your **Client ID** and **Client Secret**.
+3. Generate an authorization code for the scopes:
+`user-read-playback-state user-read-currently-playing user-read-recently-played playlist-read-private user-modify-playback-state user-read-playback-position`
+4. Exchange the code for **access** and **refresh** tokens with a `POST https://accounts.spotify.com/api/token` request.
+5. Paste the tokens (and your client credentials) into `extension.ts` before packaging.
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+*(For detailed, copy-paste curl snippets see the project wiki.)*
 
-For example:
+## ⚙️ Extension Settings
 
-This extension contributes the following settings:
+| Setting | Description | Default |
+| :-- | :-- | :-- |
+| `spotifyPersonal.showStatusBarIcon` | Hide or show the status-bar icon. | `true` |
+| `spotifyPersonal.pollInterval` | Seconds between automatic “Now Playing” refreshes. | `30` |
+| `spotifyPersonal.deviceName` | Preferred device name to control (leave blank for active device). | `""` |
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+## 🐞 Known Issues
 
-## Known Issues
+- Playlist tracks are limited to the first 50 items (Spotify API paging).
+- Playback commands fail if no active device is available—start Spotify on any device first.
+- The extension currently uses hard-coded client credentials; moving them to VS Code Secret Storage is planned.
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
 
-## Release Notes
-
-Users appreciate release notes as you update your extension.
+## 📜 Release Notes
 
 ### 1.0.0
 
-Initial release of ...
+* Initial release.
+* Status-bar launcher, full webview panel.
+* Search tracks, browse playlists, play tracks \& playlists.
+* Automatic token refresh with persistent storage.
 
-### 1.0.1
 
-Fixed issue #.
+## 🚀 Development \& Packaging
 
-### 1.1.0
+```bash
+# install deps
+npm install
 
-Added features X, Y, and Z.
+# compile & lint
+npm run compile
 
----
+# package as VSIX (requires Node 20+ or vsce ≤ 2.22)
+vsce package
+```
 
-## Following extension guidelines
+Install the generated `.vsix` via **Extensions ▶ … ▶ Install from VSIX** or
+`code --install-extension spotify-personal-1.0.0.vsix`.
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+## 💡 Contributing
 
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+Pull requests and issues are welcome—this is a personal project but improvement ideas are always appreciated!
 
-## Working with Markdown
+Enjoy seamless Spotify control without leaving your code ✌️
 
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**

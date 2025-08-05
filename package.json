@@ -9,6 +9,10 @@
   "categories": [
     "Other"
   ],
+  "repository": {
+    "type": "git",
+    "url":"https://github.com/NithinKonda/vs-tify" 
+  },
   "activationEvents": [
     "onCommand:spotify-personal.openSpotifyPanel"
   ],
@@ -50,6 +54,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "spotify-web-api-node": "^5.0.2"
+    "spotify-web-api-node": "^5.0.2",
+    "undici": "^7.13.0"
   }
 }

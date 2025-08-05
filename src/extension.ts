@@ -173,7 +173,7 @@ async function refreshAccessToken(): Promise<void> {
             throw new Error(`Token refresh failed: ${response.statusText}`);
         }
 
-        const data = await response.json();
+        const data = await response.json() as { access_token: string; expires_in: number };
 
         // Store the new token with proper expiration time
         await storeTokenData(data.access_token, data.expires_in);
@@ -270,8 +270,12 @@ async function getCurrentPlaying(): Promise<string> {
         const data = await spotifyApi.getMyCurrentPlayingTrack();
         if (data.body && data.body.item) {
             const track = data.body.item;
-            const artists = track.artists.map(artist => artist.name).join(', ');
-            return `${track.name} - ${artists}`;
+            if ('artists' in track) {
+                const artists = (track.artists as Array<{ name: string }>).map(artist => artist.name).join(', ');
+                return `${track.name} - ${artists}`;
+            } else {
+                return track.name;
+            }
         }
         return await getRecentPlayed();
     } catch (error) {
