@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--vscode-editor-background, #1e1e1e) 0%, var(--vscode-panel-background, #252526) 100%);
+            color: var(--vscode-editor-foreground, #cccccc);
+            padding: 24px;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1db954, #1ed760);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--vscode-descriptionForeground, #999);
+            font-size: 1.1rem;
+        }
+
+        .section {
+            background: var(--vscode-panel-background, #252526);
+            border: 1px solid var(--vscode-panel-border, #3c3c3c);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #1db954, #1ed760, #1db954);
+            background-size: 200% 100%;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { background-position: 200% 0; }
+            50% { background-position: -200% 0; }
+        }
+
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--vscode-titleBar-activeForeground, #ffffff);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #1db954, #1ed760);
+            border-radius: 2px;
+        }
+
+        .current-track {
+            background: linear-gradient(135deg, rgba(29, 185, 84, 0.1), rgba(30, 215, 96, 0.1));
+            border: 1px solid rgba(29, 185, 84, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--vscode-textLink-foreground, #4fc3f7);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .current-track::before {
+            content: '♪';
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: #1db954;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: translateY(-50%) scale(1); }
+            50% { opacity: 1; transform: translateY(-50%) scale(1.1); }
+        }
+
+        .search-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 14px 18px;
+            background: var(--vscode-input-background, #3c3c3c);
+            color: var(--vscode-input-foreground, #cccccc);
+            border: 2px solid var(--vscode-input-border, #464647);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: #1db954;
+            box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.1);
+            transform: translateY(-1px);
+        }
+
+        input[type="text"]::placeholder {
+            color: var(--vscode-input-placeholderForeground, #999);
+        }
+
+        button {
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #1db954, #1ed760);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            outline: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(29, 185, 84, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .small-btn {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            min-width: auto;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            padding: 10px 14px;
+            font-size: 0.9rem;
+        }
+
+        .refresh-btn:hover {
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .control-buttons button {
+            flex: 1;
+            max-width: 160px;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        li {
+            background: var(--vscode-list-inactiveSelectionBackground, #37373d);
+            border: 1px solid var(--vscode-panel-border, #3c3c3c);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(135deg, #1db954, #1ed760);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .clickable {
+            cursor: pointer;
+        }
+
+        .clickable:hover {
+            background: var(--vscode-list-hoverBackground, #2a2d2e);
+            transform: translateX(8px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .clickable:hover::before {
+            transform: scaleY(1);
+        }
+
+        .track-info {
+            flex: 1;
+            font-weight: 500;
+            color: var(--vscode-editor-foreground, #cccccc);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .track-info::before {
+            content: '🎵';
+            font-size: 1.2rem;
+            filter: grayscale(0.3);
+        }
+
+        .track-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        #playlistTracks {
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .close-btn {
+            background: linear-gradient(135deg, #ff4757, #ff6b7a);
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+
+        .close-btn:hover {
+            box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--vscode-descriptionForeground, #999);
+            font-style: italic;
+        }
+
+        .empty-state::before {
+            content: '🎭';
+            display: block;
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .search-container {
+                flex-direction: column;
+            }
+
+            .control-buttons {
+                flex-direction: column;
+            }
+
+            .control-buttons button {
+                max-width: none;
+            }
+
+            li {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .track-buttons {
+                align-self: stretch;
+                justify-content: flex-end;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(29, 185, 84, 0.3);
+            border-radius: 50%;
+            border-top-color: #1db954;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Spotify Control Panel</h1>
+            <p>Your music, your way</p>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">Now Playing</h2>
+                <button class="refresh-btn" onclick="refreshCurrentTrack()">🔄 Refresh</button>
+            </div>
+            <div id="currentTrack" class="current-track">Loading current track...</div>
+            <div class="control-buttons">
+                <button onclick="sendMessage('playPause')">⏯️ Play/Pause</button>
+                <button onclick="sendMessage('skip')">⏭️ Skip Track</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <h3 class="section-title">Search Music</h3>
+            </div>
+            <div class="search-container">
+                <input id="searchInput" type="text" placeholder="Search for songs, artists, or albums..." onkeypress="handleSearchKeyPress(event)">
+                <button onclick="searchSongs()">🔍 Search</button>
+            </div>
+            <ul id="searchResults"></ul>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <h3 class="section-title">Your Playlists</h3>
+            </div>
+            <ul id="playlistsList">
+                <!-- Playlists will be populated here -->
+            </ul>
+        </div>
+
+        <div class="section" id="playlistTracks">
+            <button class="close-btn" onclick="closePlaylistView()">✕ Close</button>
+            <div class="section-header">
+                <h3 id="playlistTitle" class="section-title">Playlist Tracks</h3>
+            </div>
+            <ul id="playlistTracksList"></ul>
+        </div>
+    </div>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+
+        // Initialize the panel
+        document.addEventListener('DOMContentLoaded', function() {
+            // Populate playlists if available
+            if (typeof playlists !== 'undefined' && playlists.length > 0) {
+                populatePlaylists(playlists);
+            }
+            
+            // Set current track if available
+            if (typeof currentTrack !== 'undefined') {
+                document.getElementById('currentTrack').textContent = currentTrack || 'No track currently playing';
+            }
+        });
+
+        function sendMessage(command, data = {}) {
+            vscode.postMessage({ command, ...data });
+        }
+
+        function searchSongs() {
+            const query = document.getElementById('searchInput').value.trim();
+            const searchResults = document.getElementById('searchResults');
+            
+            if (query) {
+                searchResults.innerHTML = '<li><div class="loading"></div> Searching...</li>';
+                vscode.postMessage({ command: 'search', query });
+            } else {
+                searchResults.innerHTML = '<li class="empty-state">Please enter a search term</li>';
+            }
+        }
+
+        function handleSearchKeyPress(event) {
+            if (event.key === 'Enter') {
+                searchSongs();
+            }
+        }
+
+        function refreshCurrentTrack() {
+            const currentTrackElement = document.getElementById('currentTrack');
+            currentTrackElement.innerHTML = '<div class="loading"></div> Refreshing...';
+            vscode.postMessage({ command: 'refresh' });
+        }
+
+        function playTrack(trackUri) {
+            vscode.postMessage({ command: 'playTrack', trackUri });
+        }
+
+        function openPlaylist(playlistId, playlistName) {
+            const playlistTracksSection = document.getElementById('playlistTracks');
+            const playlistTracksList = document.getElementById('playlistTracksList');
+            
+            playlistTracksList.innerHTML = '<li><div class="loading"></div> Loading tracks...</li>';
+            playlistTracksSection.style.display = 'block';
+            playlistTracksSection.scrollIntoView({ behavior: 'smooth' });
+            
+            vscode.postMessage({ command: 'openPlaylist', playlistId, playlistName });
+        }
+
+        function playPlaylist(playlistUri) {
+            vscode.postMessage({ command: 'playPlaylist', playlistUri });
+        }
+
+        function closePlaylistView() {
+            document.getElementById('playlistTracks').style.display = 'none';
+        }
+
+        function populatePlaylists(playlists) {
+            const playlistsList = document.getElementById('playlistsList');
+            
+            if (playlists.length === 0) {
+                playlistsList.innerHTML = '<li class="empty-state">No playlists found</li>';
+                return;
+            }
+
+            playlistsList.innerHTML = playlists.map(playlist => `
+                <li class="clickable">
+                    <span class="track-info">${playlist.name}</span>
+                    <div class="track-buttons">
+                        <button class="small-btn" onclick="openPlaylist('${playlist.id}', '${playlist.name}')">👁️ View</button>
+                        <button class="small-btn" onclick="playPlaylist('${playlist.uri}')">▶️ Play</button>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        // Handle messages from the extension
+        window.addEventListener('message', event => {
+            const message = event.data;
+            
+            switch (message.command) {
+                case 'searchResults':
+                    const searchResultsList = document.getElementById('searchResults');
+                    if (message.results.length === 0) {
+                        searchResultsList.innerHTML = '<li class="empty-state">No results found for your search</li>';
+                    } else {
+                        searchResultsList.innerHTML = message.results
+                            .map(result => `
+                                <li class="clickable">
+                                    <span class="track-info">${result.name} - ${result.artist}</span>
+                                    <button class="small-btn" onclick="playTrack('${result.uri}')">▶️ Play</button>
+                                </li>
+                            `).join('');
+                    }
+                    break;
+
+                case 'updateCurrentTrack':
+                    document.getElementById('currentTrack').textContent = message.track || 'No track currently playing';
+                    break;
+
+                case 'showPlaylistTracks':
+                    document.getElementById('playlistTitle').textContent = `${message.playlistName} - Tracks`;
+                    const playlistTracksList = document.getElementById('playlistTracksList');
+                    
+                    if (message.tracks.length === 0) {
+                        playlistTracksList.innerHTML = '<li class="empty-state">This playlist is empty</li>';
+                    } else {
+                        playlistTracksList.innerHTML = message.tracks
+                            .map(track => `
+                                <li class="clickable">
+                                    <span class="track-info">${track.name} - ${track.artist}</span>
+                                    <button class="small-btn" onclick="playTrack('${track.uri}')">▶️ Play</button>
+                                </li>
+                            `).join('');
+                    }
+                    document.getElementById('playlistTracks').style.display = 'block';
+                    break;
+
+                case 'updatePlaylists':
+                    populatePlaylists(message.playlists);
+                    break;
+            }
+        });
+
+        // Add some interactive feedback
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON') {
+                e.target.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    e.target.style.transform = '';
+                }, 150);
+            }
+        });
+    </script>
+</body>
+</html>
