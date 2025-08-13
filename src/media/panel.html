@@ -1,591 +1,1280 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify Panel</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enhanced Spotify Panel</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background: linear-gradient(
+          135deg,
+          var(--vscode-editor-background, #1e1e1e) 0%,
+          var(--vscode-panel-background, #252526) 100%
+        );
+        color: var(--vscode-editor-foreground, #cccccc);
+        padding: 20px;
+        min-height: 100vh;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #1db954, #1ed760);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
+      }
+
+      .header p {
+        color: var(--vscode-descriptionForeground, #999);
+        font-size: 1.1rem;
+      }
+
+      .section {
+        background: var(--vscode-panel-background, #252526);
+        border: 1px solid var(--vscode-panel-border, #3c3c3c);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #1db954, #1ed760, #1db954);
+        background-size: 200% 100%;
+        animation: shimmer 3s ease-in-out infinite;
+      }
+
+      @keyframes shimmer {
+        0%,
+        100% {
+          background-position: 200% 0;
+        }
+        50% {
+          background-position: -200% 0;
+        }
+      }
+
+      .section:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      }
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .section-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--vscode-titleBar-activeForeground, #ffffff);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .section-title::before {
+        content: "";
+        width: 4px;
+        height: 20px;
+        background: linear-gradient(135deg, #1db954, #1ed760);
+        border-radius: 2px;
+      }
+
+      /* Enhanced Now Playing */
+      .now-playing {
+        background: linear-gradient(
+          135deg,
+          rgba(29, 185, 84, 0.15),
+          rgba(30, 215, 96, 0.15)
+        );
+        border: 2px solid rgba(29, 185, 84, 0.3);
+        border-radius: 20px;
+        padding: 28px;
+        margin-bottom: 20px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .now-playing::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          45deg,
+          transparent,
+          rgba(29, 185, 84, 0.05),
+          transparent
+        );
+        animation: glow 4s ease-in-out infinite;
+        pointer-events: none;
+      }
+
+      @keyframes glow {
+        0%,
+        100% {
+          opacity: 0;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
+      .track-display {
+        text-align: center;
+        margin-bottom: 20px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .current-track-text {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--vscode-textLink-foreground, #4fc3f7);
+        margin-bottom: 12px;
+      }
+
+      .playback-status {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-size: 0.95rem;
+        color: var(--vscode-descriptionForeground, #999);
+      }
+
+      .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #1db954;
+        animation: pulse 2s infinite;
+      }
+
+      .status-indicator.paused {
+        background: #ff6b6b;
+        animation: none;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.5;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.2);
+        }
+      }
+
+      /* Progress Bar */
+      .progress-container {
+        margin: 20px 0;
+        position: relative;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        overflow: hidden;
+        cursor: pointer;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #1db954, #1ed760);
+        border-radius: 3px;
+        transition: width 0.3s ease;
+        position: relative;
+      }
+
+      .progress-time {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: var(--vscode-descriptionForeground, #999);
+        margin-top: 5px;
+      }
+
+      /* Enhanced Controls */
+      .control-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .control-buttons button {
+        padding: 12px 18px;
+        background: linear-gradient(135deg, #1db954, #1ed760);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        outline: none;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .control-buttons button::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+
+      .control-buttons button:hover::before {
+        left: 100%;
+      }
+
+      .control-buttons button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(29, 185, 84, 0.4);
+      }
+
+      .control-buttons button:active {
+        transform: translateY(0);
+      }
+
+      .main-control {
+        padding: 16px 24px;
+        font-size: 1.1rem;
+      }
+
+      /* Settings Panel */
+      .settings-panel {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 20px;
+        padding: 20px;
+        background: rgba(29, 185, 84, 0.1);
+        border-radius: 12px;
+        border: 1px solid rgba(29, 185, 84, 0.2);
+      }
+
+      .volume-control {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 200px;
+      }
+
+      .volume-slider {
+        flex: 1;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+      }
+
+      .volume-slider::-webkit-slider-thumb {
+        width: 16px;
+        height: 16px;
+        background: #1db954;
+        border-radius: 50%;
+        cursor: pointer;
+        -webkit-appearance: none;
+      }
+
+      .toggle-btn {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #cccccc;
+      }
+
+      .toggle-btn.active {
+        background: linear-gradient(135deg, #1db954, #1ed760);
+        border-color: #1db954;
+        color: white;
+      }
+
+      /* Search Section */
+      .search-container {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      input[type="text"] {
+        flex: 1;
+        padding: 14px 18px;
+        background: var(--vscode-input-background, #3c3c3c);
+        color: var(--vscode-input-foreground, #cccccc);
+        border: 2px solid var(--vscode-input-border, #464647);
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        outline: none;
+      }
+
+      input[type="text"]:focus {
+        border-color: #1db954;
+        box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.1);
+        transform: translateY(-1px);
+      }
+
+      input[type="text"]::placeholder {
+        color: var(--vscode-input-placeholderForeground, #999);
+      }
+
+      button {
+        padding: 14px 20px;
+        background: linear-gradient(135deg, #1db954, #1ed760);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        outline: none;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .small-btn {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        border-radius: 8px;
+        min-width: auto;
+      }
+
+      .refresh-btn {
+        background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+        padding: 10px 14px;
+        font-size: 0.9rem;
+      }
+
+      .refresh-btn:hover {
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+      }
+
+      /* Queue Section */
+      .queue-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .queue-controls {
+        display: flex;
+        gap: 10px;
+      }
+
+      .queue-item {
+        background: var(--vscode-list-inactiveSelectionBackground, #37373d);
+        border: 1px solid var(--vscode-panel-border, #3c3c3c);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .queue-item.current {
+        border-color: #1db954;
+        background: rgba(29, 185, 84, 0.1);
+      }
+
+      .queue-item::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: linear-gradient(135deg, #1db954, #1ed760);
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+      }
+
+      .queue-item:hover {
+        background: var(--vscode-list-hoverBackground, #2a2d2e);
+        transform: translateX(8px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .queue-item:hover::before {
+        transform: scaleY(1);
+      }
+
+      /* Lists */
+      ul {
+        list-style: none;
+      }
+
+      li {
+        background: var(--vscode-list-inactiveSelectionBackground, #37373d);
+        border: 1px solid var(--vscode-panel-border, #3c3c3c);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: linear-gradient(135deg, #1db954, #1ed760);
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+      }
+
+      .clickable {
+        cursor: pointer;
+      }
+
+      .clickable:hover {
+        background: var(--vscode-list-hoverBackground, #2a2d2e);
+        transform: translateX(8px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .clickable:hover::before {
+        transform: scaleY(1);
+      }
+
+      .track-info {
+        flex: 1;
+        font-weight: 500;
+        color: var(--vscode-editor-foreground, #cccccc);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .track-info::before {
+        content: "🎵";
+        font-size: 1.2rem;
+        filter: grayscale(0.3);
+      }
+
+      .track-buttons {
+        display: flex;
+        gap: 8px;
+      }
+
+      /* Device Selection */
+      .device-selector {
+        margin-top: 20px;
+      }
+
+      .device-list {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .device-item {
+        padding: 8px 16px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .device-item.active {
+        background: linear-gradient(135deg, #1db954, #1ed760);
+        border-color: #1db954;
+        color: white;
+      }
+
+      .device-item:hover {
+        background: rgba(29, 185, 84, 0.2);
+        border-color: #1db954;
+      }
+
+      /* Hidden sections */
+      #playlistTracks,
+      #queueSection {
+        display: none;
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .close-btn {
+        background: linear-gradient(135deg, #ff4757, #ff6b7a);
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+      }
+
+      .close-btn:hover {
+        box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4);
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--vscode-descriptionForeground, #999);
+        font-style: italic;
+      }
+
+      .empty-state::before {
+        content: "🎭";
+        display: block;
+        font-size: 3rem;
+        margin-bottom: 16px;
+        opacity: 0.5;
+      }
+
+      /* Loading Animation */
+      .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(29, 185, 84, 0.3);
+        border-radius: 50%;
+        border-top-color: #1db954;
+        animation: spin 1s ease-in-out infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, var(--vscode-editor-background, #1e1e1e) 0%, var(--vscode-panel-background, #252526) 100%);
-            color: var(--vscode-editor-foreground, #cccccc);
-            padding: 24px;
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 32px;
+          padding: 16px;
         }
 
         .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #1db954, #1ed760);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 8px;
-        }
-
-        .header p {
-            color: var(--vscode-descriptionForeground, #999);
-            font-size: 1.1rem;
+          font-size: 2rem;
         }
 
         .section {
-            background: var(--vscode-panel-background, #252526);
-            border: 1px solid var(--vscode-panel-border, #3c3c3c);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #1db954, #1ed760, #1db954);
-            background-size: 200% 100%;
-            animation: shimmer 3s ease-in-out infinite;
-        }
-
-        @keyframes shimmer {
-            0%, 100% { background-position: 200% 0; }
-            50% { background-position: -200% 0; }
-        }
-
-        .section:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .section-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: var(--vscode-titleBar-activeForeground, #ffffff);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .section-title::before {
-            content: '';
-            width: 4px;
-            height: 20px;
-            background: linear-gradient(135deg, #1db954, #1ed760);
-            border-radius: 2px;
-        }
-
-        .current-track {
-            background: linear-gradient(135deg, rgba(29, 185, 84, 0.1), rgba(30, 215, 96, 0.1));
-            border: 1px solid rgba(29, 185, 84, 0.3);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: var(--vscode-textLink-foreground, #4fc3f7);
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .current-track::before {
-            content: '♪';
-            position: absolute;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1.5rem;
-            color: #1db954;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.5; transform: translateY(-50%) scale(1); }
-            50% { opacity: 1; transform: translateY(-50%) scale(1.1); }
+          padding: 20px;
         }
 
         .search-container {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        input[type="text"] {
-            flex: 1;
-            padding: 14px 18px;
-            background: var(--vscode-input-background, #3c3c3c);
-            color: var(--vscode-input-foreground, #cccccc);
-            border: 2px solid var(--vscode-input-border, #464647);
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            outline: none;
-        }
-
-        input[type="text"]:focus {
-            border-color: #1db954;
-            box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.1);
-            transform: translateY(-1px);
-        }
-
-        input[type="text"]::placeholder {
-            color: var(--vscode-input-placeholderForeground, #999);
-        }
-
-        button {
-            padding: 14px 20px;
-            background: linear-gradient(135deg, #1db954, #1ed760);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            outline: none;
-            position: relative;
-            overflow: hidden;
-        }
-
-        button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s ease;
-        }
-
-        button:hover::before {
-            left: 100%;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(29, 185, 84, 0.4);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        .small-btn {
-            padding: 8px 12px;
-            font-size: 0.85rem;
-            border-radius: 8px;
-            min-width: auto;
-        }
-
-        .refresh-btn {
-            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
-            padding: 10px 14px;
-            font-size: 0.9rem;
-        }
-
-        .refresh-btn:hover {
-            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+          flex-direction: column;
         }
 
         .control-buttons {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
+          flex-direction: column;
         }
 
         .control-buttons button {
-            flex: 1;
-            max-width: 160px;
+          max-width: none;
         }
 
-        ul {
-            list-style: none;
+        .settings-panel {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .volume-control {
+          min-width: auto;
         }
 
         li {
-            background: var(--vscode-list-inactiveSelectionBackground, #37373d);
-            border: 1px solid var(--vscode-panel-border, #3c3c3c);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        li::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: linear-gradient(135deg, #1db954, #1ed760);
-            transform: scaleY(0);
-            transition: transform 0.3s ease;
-        }
-
-        .clickable {
-            cursor: pointer;
-        }
-
-        .clickable:hover {
-            background: var(--vscode-list-hoverBackground, #2a2d2e);
-            transform: translateX(8px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .clickable:hover::before {
-            transform: scaleY(1);
-        }
-
-        .track-info {
-            flex: 1;
-            font-weight: 500;
-            color: var(--vscode-editor-foreground, #cccccc);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .track-info::before {
-            content: '🎵';
-            font-size: 1.2rem;
-            filter: grayscale(0.3);
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
         }
 
         .track-buttons {
-            display: flex;
-            gap: 8px;
+          align-self: stretch;
+          justify-content: flex-end;
         }
-
-        #playlistTracks {
-            display: none;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .close-btn {
-            background: linear-gradient(135deg, #ff4757, #ff6b7a);
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 8px 12px;
-            font-size: 0.9rem;
-        }
-
-        .close-btn:hover {
-            box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--vscode-descriptionForeground, #999);
-            font-style: italic;
-        }
-
-        .empty-state::before {
-            content: '🎭';
-            display: block;
-            font-size: 3rem;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            body {
-                padding: 16px;
-            }
-
-            .header h1 {
-                font-size: 2rem;
-            }
-
-            .section {
-                padding: 20px;
-            }
-
-            .search-container {
-                flex-direction: column;
-            }
-
-            .control-buttons {
-                flex-direction: column;
-            }
-
-            .control-buttons button {
-                max-width: none;
-            }
-
-            li {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-            }
-
-            .track-buttons {
-                align-self: stretch;
-                justify-content: flex-end;
-            }
-        }
-
-        /* Loading Animation */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(29, 185, 84, 0.3);
-            border-radius: 50%;
-            border-top-color: #1db954;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <h1>Spotify Control Panel</h1>
-            <p>Your music, your way</p>
+      <div class="header">
+        <h1>🎵 Enhanced Spotify Control Panel</h1>
+        <p>Complete music control at your fingertips</p>
+      </div>
+
+      <!-- Now Playing Section -->
+      <div class="section">
+        <div class="section-header">
+          <h2 class="section-title">Now Playing</h2>
+          <button class="refresh-btn" onclick="refreshCurrentTrack()">
+            🔄 Refresh
+          </button>
         </div>
 
-        <div class="section">
-            <div class="section-header">
-                <h2 class="section-title">Now Playing</h2>
-                <button class="refresh-btn" onclick="refreshCurrentTrack()">🔄 Refresh</button>
+        <div class="now-playing">
+          <div class="track-display">
+            <div id="currentTrack" class="current-track-text">
+              Loading current track...
             </div>
-            <div id="currentTrack" class="current-track">Loading current track...</div>
-            <div class="control-buttons">
-                <button onclick="sendMessage('playPause')">⏯️ Play/Pause</button>
-                <button onclick="sendMessage('skip')">⏭️ Skip Track</button>
+            <div class="playback-status">
+              <div id="statusIndicator" class="status-indicator"></div>
+              <span id="playbackStatus">Loading...</span>
             </div>
+          </div>
+
+          <div class="progress-container">
+            <div class="progress-bar" onclick="seekToPosition(event)">
+              <div
+                id="progressFill"
+                class="progress-fill"
+                style="width: 0%"
+              ></div>
+            </div>
+            <div class="progress-time">
+              <span id="currentTime">0:00</span>
+              <span id="totalTime">0:00</span>
+            </div>
+          </div>
+
+          <div class="control-buttons">
+            <button onclick="sendMessage('previous')">⏮️ Previous</button>
+            <button
+              id="playPauseBtn"
+              class="main-control"
+              onclick="sendMessage('playPause')"
+            >
+              ▶️ Play
+            </button>
+            <button onclick="sendMessage('skip')">⏭️ Skip</button>
+          </div>
+
+          <div class="settings-panel">
+            <div class="volume-control">
+              <span>🔊</span>
+              <input
+                type="range"
+                id="volumeSlider"
+                class="volume-slider"
+                min="0"
+                max="100"
+                value="50"
+                onchange="setVolume(this.value)"
+              />
+              <span id="volumeDisplay">50%</span>
+            </div>
+
+            <button
+              id="shuffleBtn"
+              class="toggle-btn"
+              onclick="sendMessage('toggleShuffle')"
+            >
+              🔀 Shuffle
+            </button>
+            <button
+              id="repeatBtn"
+              class="toggle-btn"
+              onclick="sendMessage('toggleRepeat')"
+            >
+              🔁 Repeat
+            </button>
+            <button
+              id="autoplayBtn"
+              class="toggle-btn active"
+              onclick="sendMessage('toggleAutoplay')"
+            >
+              🎵 Autoplay
+            </button>
+          </div>
         </div>
 
-        <div class="section">
-            <div class="section-header">
-                <h3 class="section-title">Search Music</h3>
-            </div>
-            <div class="search-container">
-                <input id="searchInput" type="text" placeholder="Search for songs, artists, or albums..." onkeypress="handleSearchKeyPress(event)">
-                <button onclick="searchSongs()">🔍 Search</button>
-            </div>
-            <ul id="searchResults"></ul>
+        <div class="device-selector">
+          <h4>Active Devices</h4>
+          <div id="deviceList" class="device-list"></div>
         </div>
+      </div>
 
-        <div class="section">
-            <div class="section-header">
-                <h3 class="section-title">Your Playlists</h3>
-            </div>
-            <ul id="playlistsList">
-                <!-- PLAYLIST_ITEMS -->
-            </ul>
+      <!-- Queue Section -->
+      <div class="section" id="queueSection">
+        <div class="queue-header">
+          <h3 class="section-title">Queue</h3>
+          <div class="queue-controls">
+            <button class="small-btn" onclick="showQueue()">👁️ Show</button>
+            <button class="small-btn" onclick="sendMessage('clearQueue')">
+              🗑️ Clear
+            </button>
+          </div>
         </div>
+        <ul id="queueList"></ul>
+      </div>
 
-        <div class="section" id="playlistTracks">
-            <button class="close-btn" onclick="closePlaylistView()">✕ Close</button>
-            <div class="section-header">
-                <h3 id="playlistTitle" class="section-title">Playlist Tracks</h3>
-            </div>
-            <ul id="playlistTracksList"></ul>
+      <!-- Search Section -->
+      <div class="section">
+        <div class="section-header">
+          <h3 class="section-title">Search Music</h3>
         </div>
+        <div class="search-container">
+          <input
+            id="searchInput"
+            type="text"
+            placeholder="Search for songs, artists, or albums..."
+            onkeypress="handleSearchKeyPress(event)"
+          />
+          <button onclick="searchSongs()">🔍 Search</button>
+        </div>
+        <ul id="searchResults"></ul>
+      </div>
+
+      <!-- Playlists Section -->
+      <div class="section">
+        <div class="section-header">
+          <h3 class="section-title">Your Playlists</h3>
+        </div>
+        <ul id="playlistsList"></ul>
+      </div>
+
+      <!-- Playlist Tracks -->
+      <div class="section" id="playlistTracks">
+        <button class="close-btn" onclick="closePlaylistView()">✕ Close</button>
+        <div class="section-header">
+          <h3 id="playlistTitle" class="section-title">Playlist Tracks</h3>
+        </div>
+        <ul id="playlistTracksList"></ul>
+      </div>
     </div>
 
     <script>
-        const vscode = acquireVsCodeApi();
+      const vscode = acquireVsCodeApi();
+      let currentPlaybackState = null;
+      let progressUpdateInterval = null;
 
-        // Initialize the panel
-        document.addEventListener('DOMContentLoaded', function() {
-            // Populate playlists if available
-            if (typeof playlists !== 'undefined' && playlists.length > 0) {
-                populatePlaylists(playlists);
-            }
-            
-            // Set current track if available
-            if (typeof currentTrack !== 'undefined') {
-                document.getElementById('currentTrack').textContent = currentTrack || 'No track currently playing';
-            }
-        });
-
-        function sendMessage(command, data = {}) {
-            vscode.postMessage({ command, ...data });
+      // Initialize the panel
+      document.addEventListener("DOMContentLoaded", function () {
+        if (window.initialData) {
+          updateCurrentTrack(window.initialData.currentTrack);
+          updatePlaybackState(window.initialData.playbackState);
+          populatePlaylists(window.initialData.playlists);
+          updateQueue(
+            window.initialData.queue,
+            window.initialData.currentQueueIndex
+          );
+          updateAutoplayStatus(window.initialData.autoplayEnabled);
+          updateDevices(window.initialData.devices);
         }
 
-        function searchSongs() {
-            const query = document.getElementById('searchInput').value.trim();
-            const searchResults = document.getElementById('searchResults');
-            
-            if (query) {
-                searchResults.innerHTML = '<li><div class="loading"></div> Searching...</li>';
-                vscode.postMessage({ command: 'search', query });
-            } else {
-                searchResults.innerHTML = '<li class="empty-state">Please enter a search term</li>';
-            }
+        // Start progress updates
+        startProgressUpdates();
+      });
+
+      function sendMessage(command, data = {}) {
+        vscode.postMessage({ command, ...data });
+      }
+
+      function startProgressUpdates() {
+        if (progressUpdateInterval) {
+          clearInterval(progressUpdateInterval);
         }
 
-        function handleSearchKeyPress(event) {
-            if (event.key === 'Enter') {
-                searchSongs();
-            }
+        progressUpdateInterval = setInterval(() => {
+          if (currentPlaybackState && currentPlaybackState.isPlaying) {
+            updateProgressDisplay();
+          }
+        }, 1000);
+      }
+
+      function updateProgressDisplay() {
+        if (!currentPlaybackState) return;
+
+        const progress = currentPlaybackState.progress || 0;
+        const duration = currentPlaybackState.duration || 0;
+
+        if (duration > 0) {
+          const percentage = (progress / duration) * 100;
+          document.getElementById("progressFill").style.width =
+            percentage + "%";
+          document.getElementById("currentTime").textContent =
+            formatTime(progress);
+          document.getElementById("totalTime").textContent =
+            formatTime(duration);
+
+          // Update progress for next iteration
+          currentPlaybackState.progress = Math.min(progress + 1000, duration);
         }
+      }
 
-        function refreshCurrentTrack() {
-            const currentTrackElement = document.getElementById('currentTrack');
-            currentTrackElement.innerHTML = '<div class="loading"></div> Refreshing...';
-            vscode.postMessage({ command: 'refresh' });
+      function formatTime(ms) {
+        const minutes = Math.floor(ms / 60000);
+        const seconds = Math.floor((ms % 60000) / 1000);
+        return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+      }
+
+      function updateCurrentTrack(track) {
+        document.getElementById("currentTrack").textContent =
+          track || "No track currently playing";
+      }
+
+      function updatePlaybackState(state) {
+        currentPlaybackState = state;
+
+        if (state) {
+          const indicator = document.getElementById("statusIndicator");
+          const status = document.getElementById("playbackStatus");
+          const playPauseBtn = document.getElementById("playPauseBtn");
+
+          if (state.isPlaying) {
+            indicator.classList.remove("paused");
+            status.textContent = "Playing";
+            playPauseBtn.innerHTML = "⏸️ Pause";
+          } else {
+            indicator.classList.add("paused");
+            status.textContent = "Paused";
+            playPauseBtn.innerHTML = "▶️ Play";
+          }
+
+          // Update volume
+          if (state.volume !== undefined) {
+            document.getElementById("volumeSlider").value = state.volume;
+            document.getElementById("volumeDisplay").textContent =
+              state.volume + "%";
+          }
+
+          // Update shuffle/repeat buttons
+          const shuffleBtn = document.getElementById("shuffleBtn");
+          const repeatBtn = document.getElementById("repeatBtn");
+
+          shuffleBtn.classList.toggle("active", state.shuffleState);
+
+          repeatBtn.classList.remove("active");
+          if (state.repeatState === "context") {
+            repeatBtn.classList.add("active");
+            repeatBtn.innerHTML = "🔁 Repeat All";
+          } else if (state.repeatState === "track") {
+            repeatBtn.classList.add("active");
+            repeatBtn.innerHTML = "🔂 Repeat One";
+          } else {
+            repeatBtn.innerHTML = "🔁 Repeat";
+          }
         }
+      }
 
-        function playTrack(trackUri) {
-            vscode.postMessage({ command: 'playTrack', trackUri });
+      function updateQueue(queue, currentIndex) {
+        const queueList = document.getElementById("queueList");
+        const queueSection = document.getElementById("queueSection");
+
+        if (queue.length > 0) {
+          queueSection.style.display = "block";
+          queueList.innerHTML = queue
+            .map(
+              (track, index) => `
+                    <li class="queue-item ${
+                      index === currentIndex ? "current" : ""
+                    }">
+                        <span class="track-info">${track.name} - ${
+                track.artist
+              }</span>
+                        <div class="track-buttons">
+                            <button class="small-btn" onclick="playFromQueue(${index})">▶️ Play</button>
+                            <button class="small-btn" onclick="removeFromQueue(${index})">❌ Remove</button>
+                        </div>
+                    </li>
+                `
+            )
+            .join("");
+        } else {
+          queueSection.style.display = "none";
         }
+      }
 
-        function openPlaylist(playlistId, playlistName) {
-            const playlistTracksSection = document.getElementById('playlistTracks');
-            const playlistTracksList = document.getElementById('playlistTracksList');
-            
-            playlistTracksList.innerHTML = '<li><div class="loading"></div> Loading tracks...</li>';
-            playlistTracksSection.style.display = 'block';
-            playlistTracksSection.scrollIntoView({ behavior: 'smooth' });
-            
-            vscode.postMessage({ command: 'openPlaylist', playlistId, playlistName });
-        }
+      function updateAutoplayStatus(enabled) {
+        const autoplayBtn = document.getElementById("autoplayBtn");
+        autoplayBtn.classList.toggle("active", enabled);
+      }
 
-        function playPlaylist(playlistUri) {
-            vscode.postMessage({ command: 'playPlaylist', playlistUri });
-        }
+      function updateDevices(devices) {
+        const deviceList = document.getElementById("deviceList");
 
-        function closePlaylistView() {
-            document.getElementById('playlistTracks').style.display = 'none';
-        }
-
-        function populatePlaylists(playlists) {
-            const playlistsList = document.getElementById('playlistsList');
-            
-            if (playlists.length === 0) {
-                playlistsList.innerHTML = '<li class="empty-state">No playlists found</li>';
-                return;
-            }
-
-            playlistsList.innerHTML = playlists.map(playlist => `
-                <li class="clickable">
-                    <span class="track-info">${playlist.name}</span>
-                    <div class="track-buttons">
-                        <button class="small-btn" onclick="openPlaylist('${playlist.id}', '${playlist.name}')">👁️ View</button>
-                        <button class="small-btn" onclick="playPlaylist('${playlist.uri}')">▶️ Play</button>
+        if (devices.length > 0) {
+          deviceList.innerHTML = devices
+            .map(
+              (device) => `
+                    <div class="device-item ${device.isActive ? "active" : ""}" 
+                         onclick="switchDevice('${device.id}')">
+                        ${device.name} (${device.type})
                     </div>
-                </li>
-            `).join('');
+                `
+            )
+            .join("");
+        } else {
+          deviceList.innerHTML =
+            '<div class="empty-state">No devices found</div>';
         }
+      }
 
-        // Handle messages from the extension
-        window.addEventListener('message', event => {
-            const message = event.data;
-            
-            switch (message.command) {
-                case 'searchResults':
-                    const searchResultsList = document.getElementById('searchResults');
-                    if (message.results.length === 0) {
-                        searchResultsList.innerHTML = '<li class="empty-state">No results found for your search</li>';
-                    } else {
-                        searchResultsList.innerHTML = message.results
-                            .map(result => `
-                                <li class="clickable">
-                                    <span class="track-info">${result.name} - ${result.artist}</span>
-                                    <button class="small-btn" onclick="playTrack('${result.uri}')">▶️ Play</button>
-                                </li>
-                            `).join('');
-                    }
-                    break;
+      function searchSongs() {
+        const query = document.getElementById("searchInput").value.trim();
+        const searchResults = document.getElementById("searchResults");
 
-                case 'updateCurrentTrack':
-                    document.getElementById('currentTrack').textContent = message.track || 'No track currently playing';
-                    break;
+        if (query) {
+          searchResults.innerHTML =
+            '<li><div class="loading"></div> Searching...</li>';
+          vscode.postMessage({ command: "search", query });
+        } else {
+          searchResults.innerHTML =
+            '<li class="empty-state">Please enter a search term</li>';
+        }
+      }
 
-                case 'showPlaylistTracks':
-                    document.getElementById('playlistTitle').textContent = `${message.playlistName} - Tracks`;
-                    const playlistTracksList = document.getElementById('playlistTracksList');
-                    
-                    if (message.tracks.length === 0) {
-                        playlistTracksList.innerHTML = '<li class="empty-state">This playlist is empty</li>';
-                    } else {
-                        playlistTracksList.innerHTML = message.tracks
-                            .map(track => `
-                                <li class="clickable">
-                                    <span class="track-info">${track.name} - ${track.artist}</span>
-                                    <button class="small-btn" onclick="playTrack('${track.uri}')">▶️ Play</button>
-                                </li>
-                            `).join('');
-                    }
-                    document.getElementById('playlistTracks').style.display = 'block';
-                    break;
+      function handleSearchKeyPress(event) {
+        if (event.key === "Enter") {
+          searchSongs();
+        }
+      }
 
-                case 'updatePlaylists':
-                    populatePlaylists(message.playlists);
-                    break;
+      function refreshCurrentTrack() {
+        sendMessage("refresh");
+      }
+
+      function playTrack(trackUri) {
+        sendMessage("playTrack", { trackUri });
+      }
+
+      function addToQueue(track) {
+        sendMessage("addToQueue", { track });
+      }
+
+      function removeFromQueue(index) {
+        sendMessage("removeFromQueue", { index });
+      }
+
+      function playFromQueue(index) {
+        sendMessage("playFromQueue", { index });
+      }
+
+      function showQueue() {
+        const queueSection = document.getElementById("queueSection");
+        queueSection.style.display = "block";
+        queueSection.scrollIntoView({ behavior: "smooth" });
+      }
+
+      function setVolume(volume) {
+        sendMessage("setVolume", { volume: parseInt(volume) });
+        document.getElementById("volumeDisplay").textContent = volume + "%";
+      }
+
+      function seekToPosition(event) {
+        const progressBar = event.currentTarget;
+        const rect = progressBar.getBoundingClientRect();
+        const clickX = event.clientX - rect.left;
+        const percentage = clickX / rect.width;
+
+        if (currentPlaybackState && currentPlaybackState.duration) {
+          const newPosition = Math.floor(
+            currentPlaybackState.duration * percentage
+          );
+          sendMessage("seekTo", { position: newPosition });
+        }
+      }
+
+      function switchDevice(deviceId) {
+        sendMessage("switchDevice", { deviceId });
+      }
+
+      function populatePlaylists(playlists) {
+        const playlistsList = document.getElementById("playlistsList");
+
+        if (playlists.length > 0) {
+          playlistsList.innerHTML = playlists
+            .map(
+              (playlist) => `
+                    <li class="clickable">
+                        <span class="track-info">${playlist.name}</span>
+                        <div class="track-buttons">
+                            <button class="small-btn" onclick="playPlaylist('${playlist.uri}')">▶️ Play</button>
+                            <button class="small-btn" onclick="openPlaylist('${playlist.id}', '${playlist.name}')">👁️ View</button>
+                            <button class="small-btn" onclick="addPlaylistToQueue('${playlist.id}')">➕ Queue</button>
+                        </div>
+                    </li>
+                `
+            )
+            .join("");
+        } else {
+          playlistsList.innerHTML =
+            '<li class="empty-state">No playlists found</li>';
+        }
+      }
+
+      function playPlaylist(playlistUri) {
+        sendMessage("playPlaylist", { playlistUri });
+      }
+
+      function openPlaylist(playlistId, playlistName) {
+        document.getElementById("playlistTitle").textContent = playlistName;
+        document.getElementById("playlistTracks").style.display = "block";
+        document.getElementById("playlistTracksList").innerHTML =
+          '<li><div class="loading"></div> Loading tracks...</li>';
+
+        sendMessage("openPlaylist", { playlistId, playlistName });
+
+        // Scroll to playlist section
+        document
+          .getElementById("playlistTracks")
+          .scrollIntoView({ behavior: "smooth" });
+      }
+
+      function addPlaylistToQueue(playlistId) {
+        sendMessage("addPlaylistToQueue", { playlistId });
+      }
+
+      function closePlaylistView() {
+        document.getElementById("playlistTracks").style.display = "none";
+      }
+
+      // Handle messages from the extension
+      window.addEventListener("message", (event) => {
+        const message = event.data;
+
+        switch (message.command) {
+          case "updateCurrentTrack":
+            updateCurrentTrack(message.track);
+            if (message.playbackState) {
+              updatePlaybackState(message.playbackState);
             }
+            if (message.queue !== undefined) {
+              updateQueue(message.queue, message.currentIndex);
+            }
+            if (message.autoplayEnabled !== undefined) {
+              updateAutoplayStatus(message.autoplayEnabled);
+            }
+            break;
+
+          case "updatePlaybackState":
+            updatePlaybackState(message.playbackState);
+            break;
+
+          case "searchResults":
+            displaySearchResults(message.results);
+            break;
+
+          case "updateQueue":
+            updateQueue(message.queue, message.currentIndex);
+            break;
+
+          case "updateAutoplayStatus":
+            updateAutoplayStatus(message.enabled);
+            break;
+
+          case "updateDevices":
+            updateDevices(message.devices);
+            break;
+
+          case "showPlaylistTracks":
+            displayPlaylistTracks(message.tracks);
+            break;
+        }
+      });
+
+      function displaySearchResults(results) {
+        const searchResults = document.getElementById("searchResults");
+
+        if (results.length > 0) {
+          searchResults.innerHTML = results
+            .map(
+              (track) => `
+                    <li class="clickable">
+                        <span class="track-info">${track.name} - ${
+                track.artist
+              }</span>
+                        <div class="track-buttons">
+                            <button class="small-btn" onclick="playTrack('${
+                              track.uri
+                            }')">▶️ Play</button>
+                            <button class="small-btn" onclick="addToQueue({name: '${track.name.replace(
+                              /'/g,
+                              "\\'"
+                            )}', artist: '${track.artist.replace(
+                /'/g,
+                "\\'"
+              )}', uri: '${track.uri}', id: '${track.id}'})">➕ Queue</button>
+                        </div>
+                    </li>
+                `
+            )
+            .join("");
+        } else {
+          searchResults.innerHTML =
+            '<li class="empty-state">No results found. Try a different search term.</li>';
+        }
+      }
+
+      function displayPlaylistTracks(tracks) {
+        const playlistTracksList =
+          document.getElementById("playlistTracksList");
+
+        if (tracks.length > 0) {
+          playlistTracksList.innerHTML = tracks
+            .map(
+              (track) => `
+                    <li class="clickable">
+                        <span class="track-info">${track.name} - ${
+                track.artist
+              }</span>
+                        <div class="track-buttons">
+                            <button class="small-btn" onclick="playTrack('${
+                              track.uri
+                            }')">▶️ Play</button>
+                            <button class="small-btn" onclick="addToQueue({name: '${track.name.replace(
+                              /'/g,
+                              "\\'"
+                            )}', artist: '${track.artist.replace(
+                /'/g,
+                "\\'"
+              )}', uri: '${track.uri}', id: '${track.id}'})">➕ Queue</button>
+                        </div>
+                    </li>
+                `
+            )
+            .join("");
+        } else {
+          playlistTracksList.innerHTML =
+            '<li class="empty-state">No tracks found in this playlist.</li>';
+        }
+      }
+
+      // Auto-refresh current track every 10 seconds
+      setInterval(() => {
+        if (document.visibilityState === "visible") {
+          sendMessage("refresh");
+        }
+      }, 10000);
+
+      // Load devices on panel load
+      setTimeout(() => {
+        sendMessage("getDevices");
+      }, 1000);
+
+      // Handle volume slider real-time feedback
+      document
+        .getElementById("volumeSlider")
+        .addEventListener("input", function (event) {
+          document.getElementById("volumeDisplay").textContent =
+            event.target.value + "%";
         });
 
-        // Add some interactive feedback
-        document.addEventListener('click', function(e) {
-            if (e.target.tagName === 'BUTTON') {
-                e.target.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    e.target.style.transform = '';
-                }, 150);
+      // Keyboard shortcuts
+      document.addEventListener("keydown", function (event) {
+        if (event.target.tagName.toLowerCase() === "input") return;
+
+        switch (event.code) {
+          case "Space":
+            event.preventDefault();
+            sendMessage("playPause");
+            break;
+          case "ArrowRight":
+            if (event.ctrlKey || event.metaKey) {
+              event.preventDefault();
+              sendMessage("skip");
             }
-        });
+            break;
+          case "ArrowLeft":
+            if (event.ctrlKey || event.metaKey) {
+              event.preventDefault();
+              sendMessage("previous");
+            }
+            break;
+          case "KeyS":
+            if (event.ctrlKey || event.metaKey) {
+              event.preventDefault();
+              sendMessage("toggleShuffle");
+            }
+            break;
+          case "KeyR":
+            if (event.ctrlKey || event.metaKey) {
+              event.preventDefault();
+              sendMessage("toggleRepeat");
+            }
+            break;
+        }
+      });
     </script>
-</body>
+  </body>
 </html>
