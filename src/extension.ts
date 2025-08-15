@@ -4,10 +4,10 @@ import * as path from 'path';
 import SpotifyWebApi from 'spotify-web-api-node';
 
 // Your Spotify app credentials
-let INITIAL_ACCESS_TOKEN = ""
+let INITIAL_ACCESS_TOKEN = "";
 
-const CLIENT_ID = ""
-const CLIENT_SECRET = ""
+const CLIENT_ID = "";
+const CLIENT_SECRET = "";
 
 // Initial tokens from your response
 const REFRESH_TOKEN = '';
@@ -29,7 +29,7 @@ export async function activate(extensionContext: vscode.ExtensionContext) {
 
     // Load stored token data or use initial values
     await initializeTokens();
-    
+
     // Load saved settings
     await loadSettings();
 
@@ -257,7 +257,7 @@ function startPlaybackMonitoring(): void {
     if (playbackMonitorInterval) {
         clearInterval(playbackMonitorInterval);
     }
-    
+
     playbackMonitorInterval = setInterval(async () => {
         if (isAutoplayEnabled && customQueue.length > 0) {
             try {
@@ -276,6 +276,15 @@ function startPlaybackMonitoring(): void {
 // Queue management functions
 async function addToQueue(track: { name: string, artist: string, uri: string, id: string }): Promise<void> {
     customQueue.push(track);
+    try {
+        await ensureValidToken();
+        await spotifyApi.addToQueue(track.uri);
+        vscode.window.showInformationMessage(`Added "${track.name}" to your Spotify queue.`);
+    } catch (err) {
+        console.error("Error adding to Spotify queue:", err);
+        vscode.window.showErrorMessage("Failed to add song to Spotify queue.");
+    }
+
     await saveSettings();
 }
 
@@ -390,8 +399,8 @@ async function toggleRepeat(): Promise<void> {
                     break;
             }
             await spotifyApi.setRepeat(newRepeatState);
-            const repeatText = newRepeatState === 'off' ? 'disabled' : 
-                             newRepeatState === 'track' ? 'enabled (track)' : 'enabled (playlist)';
+            const repeatText = newRepeatState === 'off' ? 'disabled' :
+                newRepeatState === 'track' ? 'enabled (track)' : 'enabled (playlist)';
             vscode.window.showInformationMessage(`Repeat ${repeatText}`);
         }
     } catch (error) {
