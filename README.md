@@ -8,7 +8,7 @@ Control playback, browse playlists, and search tracks without leaving your edito
 
 | Feature | Description |
 | :-- | :-- |
-| 🎛 **Status-bar control** | A compact Spotify icon in the status bar opens the full panel. |
+| 🎛 **Status-bar control** | A compact Spotify icon in the status bar opens the full panel and queue. |
 | 🎵 **Now Playing** | Shows the current (or most recent) track with artist names and live refresh. |
 | 🔍 **Quick Search** | Search tracks by name and play any result instantly. |
 | 📑 **Playlists Browser** | Lists all your playlists. View tracks inside any playlist or start it with one click. |
